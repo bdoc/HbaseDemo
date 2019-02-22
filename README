@@ -1,0 +1,4 @@
+export HBASE_CONF_DIR=/etc/hbase/conf
+export HADOOP_CONF_DIR=/etc/hadoop/conf
+
+java -cp hbase-demo-1.0-SNAPSHOT.jar com.num3rd.hbase.HbaseKerberosDemo user /path/user.keytab hdfs://HA
