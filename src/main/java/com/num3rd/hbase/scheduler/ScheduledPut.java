@@ -7,8 +7,10 @@ import org.apache.hadoop.hbase.client.*;
 import org.apache.hadoop.hbase.util.Bytes;
 
 import java.io.IOException;
+import java.util.logging.Logger;
 
 public class ScheduledPut implements Runnable {
+    Logger LOG = Logger.getLogger(getClass().getName());
     private Configuration configuration;
 
     public ScheduledPut(Configuration configuration) {
@@ -16,7 +18,7 @@ public class ScheduledPut implements Runnable {
     }
 
     public void run() {
-        System.out.println(getClass());
+        LOG.info(getClass().getName());
         Connection connection = null;
         try {
             connection = ConnectionFactory.createConnection(configuration);

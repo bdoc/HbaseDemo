@@ -45,7 +45,7 @@ public class ScheduledMain {
         ScheduledExecutorService scheduledExecutorServicePut = Executors.newScheduledThreadPool(corePoolSize);
         ScheduledPut scheduledPut = new ScheduledPut(configuration);
         for (int i = 0; i < corePoolSize; i++) {
-            scheduledExecutorServicePut.scheduleWithFixedDelay(scheduledPut, (i * 9 + i), 30, TimeUnit.SECONDS);
+            scheduledExecutorServicePut.scheduleAtFixedRate(scheduledPut, (i * 9 + i), 30, TimeUnit.SECONDS);
         }
     }
 
