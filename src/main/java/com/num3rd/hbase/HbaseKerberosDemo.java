@@ -5,6 +5,7 @@ package com.num3rd.hbase;
  * https://hbase.apache.org/book.html#_examples
  */
 
+import com.num3rd.hbase.utils.Contants;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hbase.*;
@@ -16,9 +17,6 @@ import org.apache.hadoop.security.UserGroupInformation;
 import java.io.IOException;
 
 public class HbaseKerberosDemo {
-    private static final String TABLE_NAME = "MY_TABLE_NAME_TOO";
-    private static final String CF_DEFAULT = "DEFAULT_COLUMN_FAMILY";
-
     public static void main(String[] args) throws IOException {
         if (args.length < 3) {
             System.out.println("Usage:main k6sKeytab k6sUser hdfsUrl");
@@ -29,8 +27,8 @@ public class HbaseKerberosDemo {
         String hdfsUrl = args[2];
 
         Configuration configuration = HBaseConfiguration.create();
-        configuration.addResource(new Path(System.getenv("HBASE_CONF_DIR"), "hbase-site.xml"));
-        configuration.addResource(new Path(System.getenv("HADOOP_CONF_DIR"), "core-site.xml"));
+        configuration.addResource(new Path(System.getenv(Contants.HBASE_CONF_DIR), Contants.HBASE_SITE));
+        configuration.addResource(new Path(System.getenv(Contants.HADOOP_CONF_DIR), Contants.CORE_SITE));
         configuration.set("fs.defaultFS", hdfsUrl);
         configuration.set("hadoop.security.authentication", "Kerberos");
 
@@ -49,7 +47,7 @@ public class HbaseKerberosDemo {
         Connection connection = ConnectionFactory.createConnection(configuration);
         Admin admin = connection.getAdmin();
 
-        TableName tableName = TableName.valueOf(TABLE_NAME);
+        TableName tableName = TableName.valueOf(Contants.TABLE_NAME);
         if (!admin.tableExists(tableName)) {
             System.out.println("Table does not exists. ");
             System.exit(-1);
@@ -62,7 +60,7 @@ public class HbaseKerberosDemo {
         admin.addColumn(tableName, newColumn);
 
         // Update exists column family
-        HColumnDescriptor existingColumn = new HColumnDescriptor(CF_DEFAULT);
+        HColumnDescriptor existingColumn = new HColumnDescriptor(Contants.CF_DEFAULT);
         existingColumn.setCompactionCompressionType(Algorithm.GZ);
         existingColumn.setMaxVersions(HConstants.ALL_VERSIONS);
         /**
@@ -79,7 +77,7 @@ public class HbaseKerberosDemo {
         admin.disableTable(tableName);
 
         // Delete an existing column family
-        admin.deleteColumn(tableName, CF_DEFAULT.getBytes("UTF-8"));
+        admin.deleteColumn(tableName, Contants.CF_DEFAULT.getBytes("UTF-8"));
 
         // Delete a table (Need to be disabled first)
         admin.deleteTable(tableName);
@@ -88,10 +86,10 @@ public class HbaseKerberosDemo {
     private static void createSchemaTable(Configuration configuration) throws IOException {
         Connection connection = ConnectionFactory.createConnection(configuration);
         Admin admin = connection.getAdmin();
-        Table table = connection.getTable(TableName.valueOf(TABLE_NAME));
+        Table table = connection.getTable(TableName.valueOf(Contants.TABLE_NAME));
 
-        HTableDescriptor hTableDescriptor = new HTableDescriptor(TableName.valueOf(TABLE_NAME));
-        hTableDescriptor.addFamily(new HColumnDescriptor(CF_DEFAULT).setCompressionType(Algorithm.NONE));
+        HTableDescriptor hTableDescriptor = new HTableDescriptor(TableName.valueOf(Contants.TABLE_NAME));
+        hTableDescriptor.addFamily(new HColumnDescriptor(Contants.CF_DEFAULT).setCompressionType(Algorithm.NONE));
 
         System.out.println("Create table. ");
         createOrOverwrite(admin, hTableDescriptor);
@@ -102,7 +100,7 @@ public class HbaseKerberosDemo {
         String reverseCurrentTimeMillis = new StringBuffer(currentTimeMillis).reverse().toString();
         Put put = new Put(Bytes.toBytes(reverseCurrentTimeMillis.concat("-r")));
         put.addColumn(
-                Bytes.toBytes(CF_DEFAULT),
+                Bytes.toBytes(Contants.CF_DEFAULT),
                 Bytes.toBytes(currentTimeMillis.concat("-q")),
                 Bytes.toBytes(currentTimeMillis.concat("-v"))
         );
