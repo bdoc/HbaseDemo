@@ -1,4 +1,4 @@
-package com.num3rd.hbase.scheduler;
+package com.num3rd.hbase.scheduler.get;
 
 import com.num3rd.hbase.utils.Contants;
 import org.apache.hadoop.conf.Configuration;
@@ -9,12 +9,14 @@ import org.apache.hadoop.hbase.util.Bytes;
 import java.io.IOException;
 import java.util.logging.Logger;
 
-public class ScheduledPut implements Runnable {
+public class ScheduledGet implements Runnable {
     Logger LOG = Logger.getLogger(getClass().getName());
     private Configuration configuration;
+    private Get get;
 
-    public ScheduledPut(Configuration configuration) {
+    public ScheduledGet(Configuration configuration, Get get) {
         this.configuration = configuration;
+        this.get = get;
     }
 
     public void run() {
@@ -31,19 +33,13 @@ public class ScheduledPut implements Runnable {
         } catch (IOException e) {
             e.printStackTrace();
         }
-        String currentTimeMillis = String.valueOf(System.currentTimeMillis());
-        String reverseCurrentTimeMillis = new StringBuffer(currentTimeMillis).reverse().toString();
-        Put put = new Put(Bytes.toBytes(reverseCurrentTimeMillis.concat("-r")));
-        put.addColumn(
-                Bytes.toBytes(Contants.CF_DEFAULT),
-                Bytes.toBytes(currentTimeMillis.concat("-q")),
-                Bytes.toBytes(currentTimeMillis.concat("-v"))
-        );
+
+        Result result = null;
         try {
-            table.put(put);
+            result = table.get(get);
         } catch (IOException e) {
             e.printStackTrace();
         }
-
+        System.out.println(Bytes.toString(result.value()));
     }
 }

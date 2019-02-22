@@ -8,7 +8,7 @@ user \
 hdfs://HA
 
 java -cp hbase-demo-1.0-SNAPSHOT.jar \
-com.num3rd.hbase.scheduler.ScheduledMain \
+com.num3rd.hbase.scheduler.put.ScheduledMain \
 user \
 /path/user.keytab \
 hdfs://HA

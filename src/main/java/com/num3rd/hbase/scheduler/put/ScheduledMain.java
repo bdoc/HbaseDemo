@@ -1,5 +1,6 @@
-package com.num3rd.hbase.scheduler;
+package com.num3rd.hbase.scheduler.put;
 
+import com.num3rd.hbase.scheduler.ScheduledAuth;
 import com.num3rd.hbase.utils.Contants;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
