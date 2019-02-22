@@ -8,10 +8,9 @@ package com.num3rd.hbase;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hbase.*;
-import org.apache.hadoop.hbase.client.Admin;
-import org.apache.hadoop.hbase.client.Connection;
-import org.apache.hadoop.hbase.client.ConnectionFactory;
+import org.apache.hadoop.hbase.client.*;
 import org.apache.hadoop.hbase.io.compress.Compression.Algorithm;
+import org.apache.hadoop.hbase.util.Bytes;
 import org.apache.hadoop.security.UserGroupInformation;
 
 import java.io.IOException;
@@ -89,6 +88,7 @@ public class HbaseKerberosDemo {
     private static void createSchemaTable(Configuration configuration) throws IOException {
         Connection connection = ConnectionFactory.createConnection(configuration);
         Admin admin = connection.getAdmin();
+        Table table = connection.getTable(TableName.valueOf(TABLE_NAME));
 
         HTableDescriptor hTableDescriptor = new HTableDescriptor(TableName.valueOf(TABLE_NAME));
         hTableDescriptor.addFamily(new HColumnDescriptor(CF_DEFAULT).setCompressionType(Algorithm.NONE));
@@ -96,6 +96,17 @@ public class HbaseKerberosDemo {
         System.out.println("Create table. ");
         createOrOverwrite(admin, hTableDescriptor);
         System.out.println(" Done. ");
+
+        // Put one row
+        String currentTimeMillis = String.valueOf(System.currentTimeMillis());
+        String reverseCurrentTimeMillis = new StringBuffer(currentTimeMillis).reverse().toString();
+        Put put = new Put(Bytes.toBytes(reverseCurrentTimeMillis.concat("-r")));
+        put.addColumn(
+                Bytes.toBytes(CF_DEFAULT),
+                Bytes.toBytes(currentTimeMillis.concat("-q")),
+                Bytes.toBytes(currentTimeMillis.concat("-v"))
+        );
+        table.put(put);
     }
 
     private static void createOrOverwrite(Admin admin, HTableDescriptor hTableDescriptor) throws IOException {
