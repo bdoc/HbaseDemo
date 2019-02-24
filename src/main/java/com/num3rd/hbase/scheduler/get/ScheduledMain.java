@@ -45,18 +45,28 @@ public class ScheduledMain {
     }
 
     private static Get put(Configuration configuration) throws IOException {
-        Connection connection = ConnectionFactory.createConnection(configuration);
-        Table table = connection.getTable(TableName.valueOf(Contants.TABLE_NAME));
-
         String currentTimeMillis = String.valueOf(System.currentTimeMillis());
         String reverseCurrentTimeMillis = new StringBuffer(currentTimeMillis).reverse().toString();
-        Put put = new Put(Bytes.toBytes(reverseCurrentTimeMillis.concat("-r")));
-        put.addColumn(
-                Bytes.toBytes(Contants.CF_DEFAULT),
-                Bytes.toBytes(currentTimeMillis.concat("-q")),
-                Bytes.toBytes(currentTimeMillis.concat("-v"))
-        );
-        table.put(put);
+
+        Connection connection = null;
+        try {
+            connection = ConnectionFactory.createConnection(configuration);
+
+            Table table = connection.getTable(TableName.valueOf(Contants.TABLE_NAME));
+
+            Put put = new Put(Bytes.toBytes(reverseCurrentTimeMillis.concat("-r")));
+            put.addColumn(
+                    Bytes.toBytes(Contants.CF_DEFAULT),
+                    Bytes.toBytes(currentTimeMillis.concat("-q")),
+                    Bytes.toBytes(currentTimeMillis.concat("-v"))
+            );
+
+            table.put(put);
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
+            connection.close();
+        }
 
         return new Get(Bytes.toBytes(reverseCurrentTimeMillis.concat("-r")));
     }

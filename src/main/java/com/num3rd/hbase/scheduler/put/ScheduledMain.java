@@ -51,15 +51,22 @@ public class ScheduledMain {
     }
 
     private static void createSchemaTable(Configuration configuration) throws IOException {
-        Connection connection = ConnectionFactory.createConnection(configuration);
-        Admin admin = connection.getAdmin();
+        Connection connection = null;
+        try {
+            connection = ConnectionFactory.createConnection(configuration);
+            Admin admin = connection.getAdmin();
 
-        HTableDescriptor hTableDescriptor = new HTableDescriptor(TableName.valueOf(Contants.TABLE_NAME));
-        hTableDescriptor.addFamily(new HColumnDescriptor(Contants.CF_DEFAULT).setCompressionType(Compression.Algorithm.NONE));
+            HTableDescriptor hTableDescriptor = new HTableDescriptor(TableName.valueOf(Contants.TABLE_NAME));
+            hTableDescriptor.addFamily(new HColumnDescriptor(Contants.CF_DEFAULT).setCompressionType(Compression.Algorithm.NONE));
 
-        System.out.println("Create table. ");
-        createOrOverwrite(admin, hTableDescriptor);
-        System.out.println(" Done. ");
+            System.out.println("Create table. ");
+            createOrOverwrite(admin, hTableDescriptor);
+            System.out.println(" Done. ");
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
+            connection.close();
+        }
     }
 
     private static void createOrOverwrite(Admin admin, HTableDescriptor hTableDescriptor) throws IOException {

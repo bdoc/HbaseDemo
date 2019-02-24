@@ -44,67 +44,83 @@ public class HbaseKerberosDemo {
     }
 
     private static void modifySchema(Configuration configuration) throws IOException {
-        Connection connection = ConnectionFactory.createConnection(configuration);
-        Admin admin = connection.getAdmin();
+        Connection connection = null;
+        try {
+            connection = ConnectionFactory.createConnection(configuration);
 
-        TableName tableName = TableName.valueOf(Contants.TABLE_NAME);
-        if (!admin.tableExists(tableName)) {
-            System.out.println("Table does not exists. ");
-            System.exit(-1);
+            Admin admin = connection.getAdmin();
+
+            TableName tableName = TableName.valueOf(Contants.TABLE_NAME);
+            if (!admin.tableExists(tableName)) {
+                System.out.println("Table does not exists. ");
+                System.exit(-1);
+            }
+
+            // Update exists table
+            HColumnDescriptor newColumn = new HColumnDescriptor("NEWCF");
+            newColumn.setCompactionCompressionType(Algorithm.GZ);
+            newColumn.setMaxVersions(HConstants.ALL_VERSIONS);
+            admin.addColumn(tableName, newColumn);
+
+            // Update exists column family
+            HColumnDescriptor existingColumn = new HColumnDescriptor(Contants.CF_DEFAULT);
+            existingColumn.setCompactionCompressionType(Algorithm.GZ);
+            existingColumn.setMaxVersions(HConstants.ALL_VERSIONS);
+            /**
+             * Does not work
+             * IllegalArgumentException: Column family 'DEFAULT_COLUMN_FAMILY' does not exist
+             *
+             HTableDescriptor hTableDescriptor = new HTableDescriptor(tableName);
+             hTableDescriptor.modifyFamily(existingColumn);
+             admin.modifyTable(tableName, hTableDescriptor);
+             */
+            admin.modifyColumn(tableName, existingColumn);
+
+            // Disable an existing table
+            admin.disableTable(tableName);
+
+            // Delete an existing column family
+            admin.deleteColumn(tableName, Contants.CF_DEFAULT.getBytes("UTF-8"));
+
+            // Delete a table (Need to be disabled first)
+            admin.deleteTable(tableName);
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
+            connection.close();
         }
-
-        // Update exists table
-        HColumnDescriptor newColumn = new HColumnDescriptor("NEWCF");
-        newColumn.setCompactionCompressionType(Algorithm.GZ);
-        newColumn.setMaxVersions(HConstants.ALL_VERSIONS);
-        admin.addColumn(tableName, newColumn);
-
-        // Update exists column family
-        HColumnDescriptor existingColumn = new HColumnDescriptor(Contants.CF_DEFAULT);
-        existingColumn.setCompactionCompressionType(Algorithm.GZ);
-        existingColumn.setMaxVersions(HConstants.ALL_VERSIONS);
-        /**
-         * Does not work
-         * IllegalArgumentException: Column family 'DEFAULT_COLUMN_FAMILY' does not exist
-         *
-         HTableDescriptor hTableDescriptor = new HTableDescriptor(tableName);
-         hTableDescriptor.modifyFamily(existingColumn);
-         admin.modifyTable(tableName, hTableDescriptor);
-         */
-        admin.modifyColumn(tableName, existingColumn);
-
-        // Disable an existing table
-        admin.disableTable(tableName);
-
-        // Delete an existing column family
-        admin.deleteColumn(tableName, Contants.CF_DEFAULT.getBytes("UTF-8"));
-
-        // Delete a table (Need to be disabled first)
-        admin.deleteTable(tableName);
     }
 
     private static void createSchemaTable(Configuration configuration) throws IOException {
-        Connection connection = ConnectionFactory.createConnection(configuration);
-        Admin admin = connection.getAdmin();
-        Table table = connection.getTable(TableName.valueOf(Contants.TABLE_NAME));
+        Connection connection = null;
+        try {
+            connection = ConnectionFactory.createConnection(configuration);
 
-        HTableDescriptor hTableDescriptor = new HTableDescriptor(TableName.valueOf(Contants.TABLE_NAME));
-        hTableDescriptor.addFamily(new HColumnDescriptor(Contants.CF_DEFAULT).setCompressionType(Algorithm.NONE));
+            Admin admin = connection.getAdmin();
+            Table table = connection.getTable(TableName.valueOf(Contants.TABLE_NAME));
 
-        System.out.println("Create table. ");
-        createOrOverwrite(admin, hTableDescriptor);
-        System.out.println(" Done. ");
+            HTableDescriptor hTableDescriptor = new HTableDescriptor(TableName.valueOf(Contants.TABLE_NAME));
+            hTableDescriptor.addFamily(new HColumnDescriptor(Contants.CF_DEFAULT).setCompressionType(Algorithm.NONE));
 
-        // Put one row
-        String currentTimeMillis = String.valueOf(System.currentTimeMillis());
-        String reverseCurrentTimeMillis = new StringBuffer(currentTimeMillis).reverse().toString();
-        Put put = new Put(Bytes.toBytes(reverseCurrentTimeMillis.concat("-r")));
-        put.addColumn(
-                Bytes.toBytes(Contants.CF_DEFAULT),
-                Bytes.toBytes(currentTimeMillis.concat("-q")),
-                Bytes.toBytes(currentTimeMillis.concat("-v"))
-        );
-        table.put(put);
+            System.out.println("Create table. ");
+            createOrOverwrite(admin, hTableDescriptor);
+            System.out.println(" Done. ");
+
+            // Put one row
+            String currentTimeMillis = String.valueOf(System.currentTimeMillis());
+            String reverseCurrentTimeMillis = new StringBuffer(currentTimeMillis).reverse().toString();
+            Put put = new Put(Bytes.toBytes(reverseCurrentTimeMillis.concat("-r")));
+            put.addColumn(
+                    Bytes.toBytes(Contants.CF_DEFAULT),
+                    Bytes.toBytes(currentTimeMillis.concat("-q")),
+                    Bytes.toBytes(currentTimeMillis.concat("-v"))
+            );
+            table.put(put);
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
+            connection.close();
+        }
     }
 
     private static void createOrOverwrite(Admin admin, HTableDescriptor hTableDescriptor) throws IOException {

@@ -25,29 +25,29 @@ public class ScheduledPut implements Runnable {
         Connection connection = null;
         try {
             connection = ConnectionFactory.createConnection(configuration);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        Table table = null;
-        try {
-            table = connection.getTable(TableName.valueOf(Contants.TABLE_NAME));
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        String currentTimeMillis = String.valueOf(System.currentTimeMillis());
-        String reverseCurrentTimeMillis = new StringBuffer(currentTimeMillis).reverse().toString();
-        Put put = new Put(Bytes.toBytes(reverseCurrentTimeMillis.concat("-r")));
-        put.addColumn(
-                Bytes.toBytes(Contants.CF_DEFAULT),
-                Bytes.toBytes(currentTimeMillis.concat("-q")),
-                Bytes.toBytes(currentTimeMillis.concat("-v"))
-        );
-        try {
+            Table table = connection.getTable(TableName.valueOf(Contants.TABLE_NAME));
+
+            String currentTimeMillis = String.valueOf(System.currentTimeMillis());
+            String reverseCurrentTimeMillis = new StringBuffer(currentTimeMillis).reverse().toString();
+            Put put = new Put(Bytes.toBytes(reverseCurrentTimeMillis.concat("-r")));
+            put.addColumn(
+                    Bytes.toBytes(Contants.CF_DEFAULT),
+                    Bytes.toBytes(currentTimeMillis.concat("-q")),
+                    Bytes.toBytes(currentTimeMillis.concat("-v"))
+            );
+
             table.put(put);
+
+            System.out.println(reverseCurrentTimeMillis.concat("-r"));
         } catch (IOException e) {
             e.printStackTrace();
+        } finally {
+            try {
+                connection.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
-        System.out.println(reverseCurrentTimeMillis.concat("-r"));
 
     }
 }

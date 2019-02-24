@@ -24,22 +24,20 @@ public class ScheduledGet implements Runnable {
         Connection connection = null;
         try {
             connection = ConnectionFactory.createConnection(configuration);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        Table table = null;
-        try {
-            table = connection.getTable(TableName.valueOf(Contants.TABLE_NAME));
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
 
-        Result result = null;
-        try {
-            result = table.get(get);
+            Table table = connection.getTable(TableName.valueOf(Contants.TABLE_NAME));
+
+            Result  result = table.get(get);
+
+            System.out.println(Bytes.toString(result.value()));
         } catch (IOException e) {
             e.printStackTrace();
+        } finally {
+            try {
+                connection.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
-        System.out.println(Bytes.toString(result.value()));
     }
 }
