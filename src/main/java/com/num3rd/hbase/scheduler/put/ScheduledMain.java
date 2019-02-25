@@ -34,15 +34,14 @@ public class ScheduledMain {
         configuration.set("fs.defaultFS", hdfsUrl);
         configuration.set("hadoop.security.authentication", "Kerberos");
 
-        int corePoolSize = 1;
-        ScheduledExecutorService scheduledExecutorServiceAuth = Executors.newScheduledThreadPool(corePoolSize);
+        ScheduledExecutorService scheduledExecutorServiceAuth = Executors.newSingleThreadScheduledExecutor();
         ScheduledAuth scheduledAuth = new ScheduledAuth(k6sUser, k6sKeytab, configuration);
         scheduledAuth.run();
         scheduledExecutorServiceAuth.scheduleAtFixedRate(scheduledAuth, 3, 3, TimeUnit.HOURS);
 
         createSchemaTable(configuration);
 
-        corePoolSize = 3;
+        int corePoolSize = 3;
         ScheduledExecutorService scheduledExecutorServicePut = Executors.newScheduledThreadPool(corePoolSize);
         ScheduledPut scheduledPut = new ScheduledPut(configuration);
         for (int i = 0; i < corePoolSize; i++) {
