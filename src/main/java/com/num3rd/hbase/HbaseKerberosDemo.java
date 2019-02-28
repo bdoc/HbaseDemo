@@ -29,6 +29,7 @@ public class HbaseKerberosDemo {
         Configuration configuration = HBaseConfiguration.create();
         configuration.addResource(new Path(System.getenv(Contants.HBASE_CONF_DIR), Contants.HBASE_SITE));
         configuration.addResource(new Path(System.getenv(Contants.HADOOP_CONF_DIR), Contants.CORE_SITE));
+        configuration.addResource(new Path(System.getenv(Contants.HADOOP_CONF_DIR), Contants.HDFS_SITE));
         configuration.set("fs.defaultFS", hdfsUrl);
         configuration.set("hadoop.security.authentication", "Kerberos");
 
