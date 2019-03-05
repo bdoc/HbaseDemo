@@ -6,13 +6,17 @@ package com.num3rd.hbase;
  */
 
 import com.num3rd.hbase.utils.Contants;
+import com.num3rd.hbase.utils.HbaseUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.hbase.*;
-import org.apache.hadoop.hbase.client.*;
+import org.apache.hadoop.hbase.HBaseConfiguration;
+import org.apache.hadoop.hbase.HColumnDescriptor;
+import org.apache.hadoop.hbase.HConstants;
+import org.apache.hadoop.hbase.TableName;
+import org.apache.hadoop.hbase.client.Admin;
+import org.apache.hadoop.hbase.client.Connection;
+import org.apache.hadoop.hbase.client.ConnectionFactory;
 import org.apache.hadoop.hbase.io.compress.Compression.Algorithm;
-import org.apache.hadoop.hbase.util.Bytes;
-import org.apache.hadoop.security.UserGroupInformation;
 
 import java.io.IOException;
 
@@ -33,15 +37,11 @@ public class HbaseKerberosDemo {
         configuration.set("fs.defaultFS", hdfsUrl);
         configuration.set("hadoop.security.authentication", "Kerberos");
 
-        authKerberos(k6sUser, k6sKeytab, configuration);
+        HbaseUtils.authKerberos(k6sUser, k6sKeytab, configuration);
 
-        createSchemaTable(configuration);
+        HbaseUtils.createSchemaTable(configuration);
+
         modifySchema(configuration);
-    }
-
-    private static void authKerberos(String k6sUser, String k6sKeytab, Configuration configuration) throws IOException {
-        UserGroupInformation.setConfiguration(configuration);
-        UserGroupInformation.loginUserFromKeytab(k6sUser, k6sKeytab);
     }
 
     private static void modifySchema(Configuration configuration) throws IOException {
@@ -90,45 +90,5 @@ public class HbaseKerberosDemo {
         } finally {
             connection.close();
         }
-    }
-
-    private static void createSchemaTable(Configuration configuration) throws IOException {
-        Connection connection = null;
-        try {
-            connection = ConnectionFactory.createConnection(configuration);
-
-            Admin admin = connection.getAdmin();
-            Table table = connection.getTable(TableName.valueOf(Contants.TABLE_NAME));
-
-            HTableDescriptor hTableDescriptor = new HTableDescriptor(TableName.valueOf(Contants.TABLE_NAME));
-            hTableDescriptor.addFamily(new HColumnDescriptor(Contants.CF_DEFAULT).setCompressionType(Algorithm.NONE));
-
-            System.out.println("Create table. ");
-            createOrOverwrite(admin, hTableDescriptor);
-            System.out.println(" Done. ");
-
-            // Put one row
-            String currentTimeMillis = String.valueOf(System.currentTimeMillis());
-            String reverseCurrentTimeMillis = new StringBuffer(currentTimeMillis).reverse().toString();
-            Put put = new Put(Bytes.toBytes(reverseCurrentTimeMillis.concat("-r")));
-            put.addColumn(
-                    Bytes.toBytes(Contants.CF_DEFAULT),
-                    Bytes.toBytes(currentTimeMillis.concat("-q")),
-                    Bytes.toBytes(currentTimeMillis.concat("-v"))
-            );
-            table.put(put);
-        } catch (IOException e) {
-            e.printStackTrace();
-        } finally {
-            connection.close();
-        }
-    }
-
-    private static void createOrOverwrite(Admin admin, HTableDescriptor hTableDescriptor) throws IOException {
-        if (admin.tableExists(hTableDescriptor.getTableName())) {
-            admin.disableTable(hTableDescriptor.getTableName());
-            admin.deleteTable(hTableDescriptor.getTableName());
-        }
-        admin.createTable(hTableDescriptor);
     }
 }

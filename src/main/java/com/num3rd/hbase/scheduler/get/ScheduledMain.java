@@ -2,6 +2,7 @@ package com.num3rd.hbase.scheduler.get;
 
 import com.num3rd.hbase.scheduler.ScheduledAuth;
 import com.num3rd.hbase.utils.Contants;
+import com.num3rd.hbase.utils.HbaseUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hbase.HBaseConfiguration;
@@ -51,6 +52,11 @@ public class ScheduledMain {
         Connection connection = null;
         try {
             connection = ConnectionFactory.createConnection(configuration);
+            Admin admin = connection.getAdmin();
+
+            if (!admin.isTableAvailable(TableName.valueOf(Contants.TABLE_NAME))) {
+                HbaseUtils.createSchemaTable(configuration);
+            }
 
             Table table = connection.getTable(TableName.valueOf(Contants.TABLE_NAME));
 
