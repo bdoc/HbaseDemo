@@ -16,3 +16,11 @@ com.num3rd.hbase.scheduler.put.ScheduledMain \
 user \
 /path/user.keytab \
 hdfs://HA
+
+default hadoop.version=2.5.1
+when jdk1.8
+bug issue
+https://issues.apache.org/jira/browse/HADOOP-10786
+
+reference
+https://community.hortonworks.com/questions/117897/hbase-connection-expiration-on-kerberized-cluster.html
