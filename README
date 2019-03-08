@@ -1,3 +1,7 @@
+jdk1.8.171
+hbase1.1.2
+hadoop2.7.3
+
 export HBASE_CONF_DIR=/etc/hbase/conf
 export HADOOP_CONF_DIR=/etc/hadoop/conf
 
